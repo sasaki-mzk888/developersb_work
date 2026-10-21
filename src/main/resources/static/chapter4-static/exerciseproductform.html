@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品登録フォーム（演習用）</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            background: #f5f1ea;
+            color: #333;
+            font-family: "Hiragino Sans", "Meiryo", sans-serif;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+        h1 { margin: 0 0 8px; font-size: 24px; }
+        .lead { margin: 0 0 24px; font-size: 13px; color: #666; }
+
+        .layout { display: flex; gap: 24px; align-items: flex-start; }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        .card-form { width: 300px; flex-shrink: 0; }
+        .card-list { flex: 1; }
+        .card h2 { margin: 0 0 12px; font-size: 16px; }
+
+        label { display: block; margin: 12px 0 4px; font-size: 12px; font-weight: bold; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0d6c3;
+            border-radius: 6px;
+            background: #fdfbf7;
+            font-size: 13px;
+        }
+        button {
+            margin-top: 16px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #0b7a75;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { background: #096762; }
+
+        .message {
+            display: none;
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: pre-line;
+        }
+        .message.success { display: block; background: #d4f7dc; color: #1b5e2f; }
+        .message.error { display: block; background: #fde2e2; color: #9b1c1c; }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .list-header h2 { margin: 0; }
+        .badge {
+            padding: 4px 14px;
+            border-radius: 999px;
+            background: #cdeeed;
+            color: #0b5f5b;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            padding: 10px;
+            background: #ece4da;
+            text-align: left;
+            font-size: 12px;
+        }
+        td { padding: 10px; border-bottom: 1px solid #f0ebe3; }
+        tr.latest td { background: #fff3b8; }
+        .empty { padding: 16px 10px; color: #999; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>商品登録フォーム（演習用）</h1>
+    <p class="lead">商品名・値段・在庫数を入力して登録ボタンを押すと、POSTリクエストで商品登録APIにデータを送信します。</p>
+
+    <div class="layout">
+        <div class="card card-form">
+            <h2>商品登録</h2>
+
+            <label for="api">使用するAPI</label>
+            <input type="text" id="api" value="/chapter4-exercise/product">
+
+            <label for="name">商品名</label>
+            <input type="text" id="name" placeholder="商品名を入力してください。">
+
+            <label for="price">値段</label>
+            <input type="number" id="price" placeholder="値段を入力してください。">
+
+            <label for="stock">在庫数</label>
+            <input type="number" id="stock" placeholder="在庫数を入力してください。">
+
+            <button id="register">登録する</button>
+
+            <div id="message" class="message"></div>
+        </div>
+
+        <div class="card card-list">
+            <div class="list-header">
+                <h2>商品一覧</h2>
+                <span class="badge" id="count">0件</span>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>商品名</th>
+                    <th>値段</th>
+                    <th>在庫数</th>
+                </tr>
+                </thead>
+                <tbody id="list"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const apiInput = document.getElementById("api");
+    const messageBox = document.getElementById("message");
+    let latestId = null;
+
+    function showMessage(text, isError) {
+        messageBox.textContent = text;
+        messageBox.className = "message " + (isError ? "error" : "success");
+    }
+
+    async function loadProducts() {
+        const res = await fetch(apiInput.value);
+        const products = await res.json();
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        if (products.length === 0) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 4;
+            td.className = "empty";
+            td.textContent = "商品はまだ登録されていません。";
+            tr.appendChild(td);
+            list.appendChild(tr);
+        }
+
+        products.forEach(p => {
+            const tr = document.createElement("tr");
+            if (p.id === latestId) tr.className = "latest";
+            [p.id, p.name, p.price.toLocaleString() + "円", p.stock].forEach(value => {
+                const td = document.createElement("td");
+                td.textContent = value;
+                tr.appendChild(td);
+            });
+            list.appendChild(tr);
+        });
+
+        document.getElementById("count").textContent = products.length + "件";
+    }
+
+    document.getElementById("register").addEventListener("click", async () => {
+        const body = {
+            name: document.getElementById("name").value,
+            price: document.getElementById("price").value === ""
+                ? null : Number(document.getElementById("price").value),
+            stock: document.getElementById("stock").value === ""
+                ? null : Number(document.getElementById("stock").value)
+        };
+
+        const res = await fetch(apiInput.value, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            latestId = data.id;
+            showMessage("『" + data.name + "』を商品登録しました。", false);
+            document.getElementById("name").value = "";
+            document.getElementById("price").value = "";
+            document.getElementById("stock").value = "";
+        } else {
+            showMessage(data.message, true);
+        }
+        loadProducts();
+    });
+
+    loadProducts();
+</script>
+</body>
+</html>
