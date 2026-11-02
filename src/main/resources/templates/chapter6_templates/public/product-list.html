@@ -1,0 +1,41 @@
+<!DOCTYPE html>  <!-- 推測 -->
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">                                                    <!-- 推測 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <!-- 推測 -->
+    <title>商品一覧</title>                                                   <!-- 推測 -->
+    <link rel="stylesheet" th:href="@{/css/chapter6.css}">                    <!-- 推測: CSSファイル名は講義に合わせる -->
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/product-list}">商品管理フォーム</a>
+    <nav class="nav">
+        <a th:href="@{/product-list}">商品一覧</a>
+        <a th:if="${isAdmin}" th:href="@{/product-management}">商品管理</a>
+        <a sec:authorize="isAnonymous()" th:href="@{/login}">ログイン</a>
+        <span th:if="${loginUsername == null}" class="login-status">未ログイン状態</span>
+        <form th:if="${loginUsername != null}" th:action="@{/logout}" method="post">
+            <span class="login-status">
+                <span th:text="${loginUsername}">user</span>でログイン中
+            </span>
+            <button type="submit">ログアウト</button>
+        </form>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="page-head">
+        <h1>商品一覧</h1>
+        <p>商品一覧の公開ページです。</p>
+        <p th:if="${isAdmin}">商品管理のタブから商品管理画面に遷移できます。</p>   <!-- 練習問題3で追加 -->
+    </section>
+
+    <section class="grid">
+        <article class="product-card" th:each="product : ${products}">
+            <h2 th:text="${product.name}">Product</h2>
+            <p><span>¥</span><span th:text="${product.price}">0</span></p>
+        </article>
+    </section>
+</main>
+</body>
+</html>
