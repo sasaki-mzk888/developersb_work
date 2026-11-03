@@ -8,7 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-@Configuration
+// @Configuration   // chapter7では無効化(SecurityConfig7と競合するため)
 public class SecurityConfig {
 
     @Bean
